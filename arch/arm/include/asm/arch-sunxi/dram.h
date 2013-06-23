@@ -103,6 +103,7 @@ struct dram_para {
 	u32 emr3;
 };
 
+#define DRAM_CCR_COMMAND_RATE_1T (0x1 << 5)
 #define DRAM_CCR_DQS_GATE (0x1 << 14)
 #define DRAM_CCR_DQS_DRIFT_COMP (0x1 << 17)
 #define DRAM_CCR_ITM_OFF (0x1 << 28)
@@ -179,8 +180,6 @@ struct dram_para {
 #define DRAM_MR_WRITE_RECOVERY(n) (((n) & 0x7) << 9)
 #define DRAM_MR_WRITE_RECOVERY_MASK DRAM_MR_WRITE_RECOVERY(0x7)
 #define DRAM_MR_POWER_DOWN (0x1 << 12)
-
-#define DRAM_TPR4_COMMAND_RATE (0x1 << 5)
 
 #define DRAM_CSEL_MAGIC 0x16237495
 
