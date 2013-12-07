@@ -253,6 +253,8 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 
 	if (!fake) {
 #if defined(CONFIG_ARMV7_NONSEC) || defined(CONFIG_ARMV7_VIRT)
+		if (IMAGE_ENABLE_OF_LIBFDT && images->ft_len)
+			armv7_update_dt(images->ft_addr);
 		armv7_init_nonsec();
 		secure_ram_addr(_do_nonsec_entry)(kernel_entry,
 						  0, machid, r2);
