@@ -24,6 +24,10 @@ obj-y	+= nonsec_virt.o
 obj-y	+= virt-v7.o
 endif
 
+ifneq ($(CONFIG_ARMV7_PSCI),)
+obj-y	+= psci.o
+endif
+
 obj-$(CONFIG_KONA) += kona-common/
 obj-$(CONFIG_OMAP_COMMON) += omap-common/
 obj-$(CONFIG_TEGRA) += tegra-common/
