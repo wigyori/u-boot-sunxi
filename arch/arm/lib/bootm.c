@@ -234,7 +234,6 @@ static void boot_prep_linux(bootm_headers_t *images)
 		printf("FDT and ATAGS support not compiled in - hanging\n");
 		hang();
 	}
-	do_nonsec_virt_switch();
 }
 
 /* Subcommand: GO */
@@ -264,8 +263,10 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
 	else
 		r2 = gd->bd->bi_boot_params;
 
-	if (!fake)
+	if (!fake) {
+		do_nonsec_virt_switch();
 		kernel_entry(0, machid, r2);
+	}
 }
 
 /* Main Entry point for arm bootm implementation
