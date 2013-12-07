@@ -32,6 +32,9 @@ obj-y	+= cpu_info.o
 ifdef CONFIG_CMD_WATCHDOG
 obj-$(CONFIG_CMD_WATCHDOG)	+= cmd_watchdog.o
 endif
+ifdef CONFIG_ARMV7_PSCI
+obj-y	+= psci.o
+endif
 endif
 
 ifdef CONFIG_SPL_BUILD
