@@ -8,5 +8,6 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 obj-y	+= timer.o
+obj-y	+= dram.o
 obj-y	+= clock.o
 obj-y	+= pinmux.o
