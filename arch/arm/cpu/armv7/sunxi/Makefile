@@ -9,3 +9,4 @@
 #
 obj-y	+= timer.o
 obj-y	+= clock.o
+obj-y	+= pinmux.o
