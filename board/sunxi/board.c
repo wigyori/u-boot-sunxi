@@ -14,6 +14,7 @@
 #include <common.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/dram.h>
+#include <asm/arch/mmc.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -42,6 +43,18 @@ int dram_init(void)
 
 	return 0;
 }
+
+#ifdef CONFIG_GENERIC_MMC
+int board_mmc_init(bd_t *bis)
+{
+	sunxi_mmc_init(CONFIG_MMC_SUNXI_SLOT);
+#if !defined (CONFIG_SPL_BUILD) && defined (CONFIG_MMC_SUNXI_SLOT_EXTRA)
+	sunxi_mmc_init(CONFIG_MMC_SUNXI_SLOT_EXTRA);
+#endif
+
+	return 0;
+}
+#endif
 
 #ifdef CONFIG_SPL_BUILD
 void sunxi_board_init(void)
