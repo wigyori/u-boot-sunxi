@@ -9,5 +9,16 @@
 #
 obj-y	+= timer.o
 obj-y	+= dram.o
+obj-y	+= board.o
 obj-y	+= clock.o
 obj-y	+= pinmux.o
+
+ifndef CONFIG_SPL_BUILD
+obj-y	+= cpu_info.o
+endif
+
+ifdef CONFIG_SPL_BUILD
+ifdef CONFIG_SPL_FEL
+obj-y	+= start.o
+endif
+endif
