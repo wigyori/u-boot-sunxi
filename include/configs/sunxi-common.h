@@ -17,6 +17,11 @@
  * High Level Configuration Options
  */
 #define CONFIG_SUNXI		/* sunxi family */
+#ifdef CONFIG_SPL_BUILD
+#ifndef CONFIG_SPL_FEL
+#define CONFIG_SYS_THUMB_BUILD	/* Thumbs mode to save space in SPL */
+#endif
+#endif
 
 #include <asm/arch/cpu.h>	/* get chip and board defs */
 
@@ -52,6 +57,9 @@
 #define PHYS_SDRAM_0			CONFIG_SYS_SDRAM_BASE
 #define PHYS_SDRAM_0_SIZE		0x80000000 /* 2 GiB */
 
+#define CONFIG_CMD_MEMORY
+#define CONFIG_CMD_SETEXPR
+
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_INITRD_TAG
@@ -72,6 +80,10 @@
  * 1MB = 0x100000, 0x100000 = 1024 * 1024
  */
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (1 << 20))
+
+/* Flat Device Tree (FDT/DT) support */
+#define CONFIG_OF_LIBFDT
+#define CONFIG_SYS_BOOTMAPSZ		(256 << 20)
 
 /*
  * Miscellaneous configurable options
@@ -115,21 +127,54 @@
 
 #include <config_cmd_default.h>
 
+/* Accept zimage + raw ramdisk without mkimage headers */
+#define CONFIG_CMD_BOOTZ
+#define CONFIG_SUPPORT_RAW_INITRD
+
+#define CONFIG_DOS_PARTITION
+#define CONFIG_CMD_FAT		/* with this we can access fat bootfs */
+#define CONFIG_FAT_WRITE	/* enable write access */
+#define CONFIG_CMD_EXT2		/* with this we can access ext2 bootfs */
+#define CONFIG_CMD_EXT4		/* with this we can access ext4 bootfs */
+
 #define CONFIG_SPL_FRAMEWORK
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_SERIAL_SUPPORT
 #define CONFIG_SPL_LIBGENERIC_SUPPORT
+
+#ifdef CONFIG_SPL_FEL
 
 #define CONFIG_SPL
 #define CONFIG_SPL_LDSCRIPT "arch/arm/cpu/armv7/sunxi/u-boot-spl-fel.lds"
 #define CONFIG_SPL_START_S_PATH "arch/arm/cpu/armv7/sunxi"
 #define CONFIG_SPL_TEXT_BASE		0x2000
 #define CONFIG_SPL_MAX_SIZE		0x4000		/* 16 KiB */
+
+#else /* CONFIG_SPL */
+
+#define CONFIG_SPL_BSS_START_ADDR	0x50000000
+#define CONFIG_SPL_BSS_MAX_SIZE		0x80000		/* 512 KiB */
+
+#define CONFIG_SPL_TEXT_BASE		0x20		/* sram start+header */
+#define CONFIG_SPL_MAX_SIZE		0x5fe0		/* 24KB on sun4i/sun7i */
+
+#define CONFIG_SPL_LIBDISK_SUPPORT
+#define CONFIG_SPL_MMC_SUPPORT
+
+#define CONFIG_SPL_LDSCRIPT "arch/arm/cpu/armv7/sunxi/u-boot-spl.lds"
+
+#define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	80	/* 40KiB */
+#define CONFIG_SPL_PAD_TO		32768		/* decimal for 'dd' */
+
+#endif /* CONFIG_SPL */
+
 /* end of 32 KiB in sram */
 #define LOW_LEVEL_SRAM_STACK		0x00008000
 #define CONFIG_SPL_STACK		LOW_LEVEL_SRAM_STACK
 
+#undef CONFIG_CMD_FPGA
 #undef CONFIG_CMD_NET
+#undef CONFIG_CMD_NFS
 
 #define CONFIG_CONS_INDEX              1       /* UART0 */
 

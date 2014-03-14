@@ -491,6 +491,16 @@ $(obj)u-boot.spr:	$(obj)u-boot.img $(obj)spl/u-boot-spl.bin
 			--pad-to=$(CONFIG_SPL_PAD_TO) --gap-fill=0xff $@
 		cat $(obj)u-boot.img >> $@
 
+# sunxi: Combined object with SPL U-Boot with sunxi header (sunxi-spl.bin)
+# and the full-blown U-Boot attached to it
+$(obj)u-boot-sunxi-with-spl.bin: $(obj)spl/sunxi-spl.bin $(obj)u-boot.img
+		tr "\000" "\377" < /dev/zero | dd ibs=1 count=$(CONFIG_SPL_PAD_TO) \
+			of=$(obj)spl/sunxi-spl-pad.bin 2>/dev/null
+		dd if=$(obj)spl/sunxi-spl.bin of=$(obj)spl/sunxi-spl-pad.bin \
+			conv=notrunc 2>/dev/null
+		cat $(obj)spl/sunxi-spl-pad.bin $(obj)u-boot.img > $@
+		rm $(obj)spl/sunxi-spl-pad.bin
+
 ifneq ($(CONFIG_TEGRA),)
 $(obj)u-boot-nodtb-tegra.bin: $(obj)spl/u-boot-spl.bin $(obj)u-boot.bin
 		$(OBJCOPY) ${OBJCFLAGS} --pad-to=$(CONFIG_SYS_TEXT_BASE) -O binary $(obj)spl/u-boot-spl $(obj)spl/u-boot-spl-pad.bin
@@ -577,6 +587,9 @@ $(obj)spl/u-boot-spl.bin:	$(SUBDIR_TOOLS) depend
 
 $(obj)tpl/u-boot-tpl.bin:	$(SUBDIR_TOOLS) depend
 		$(MAKE) -C spl all CONFIG_TPL_BUILD=y
+
+$(obj)spl/sunxi-spl.bin:	$(SUBDIR_TOOLS) depend
+		$(MAKE) -C spl all
 
 # Explicitly make _depend in subdirs containing multiple targets to prevent
 # parallel sub-makes creating .depend files simultaneously.
@@ -799,6 +812,7 @@ clean:
 	       $(obj)tools/dump{env,}image		  \
 	       $(obj)tools/mk{env,}image   $(obj)tools/mpc86x_clk	  \
 	       $(obj)tools/mk{$(BOARD),}spl				  \
+	       $(obj)tools/mksunxiboot					  \
 	       $(obj)tools/mxsboot					  \
 	       $(obj)tools/ncb		   $(obj)tools/ubsha1		  \
 	       $(obj)tools/kernel-doc/docproc				  \
@@ -855,6 +869,7 @@ clobber:	tidy
 	@[ ! -d $(obj)nand_spl ] || find $(obj)nand_spl -name "*" -type l -print | xargs rm -f
 	@rm -f $(obj)dts/*.tmp
 	@rm -f $(obj)spl/u-boot-spl{,-pad}.ais
+	@rm -f $(obj)spl/sun?i-spl.bin
 
 mrproper \
 distclean:	clobber unconfig
