@@ -15,6 +15,7 @@ obj-$(CONFIG_PCA9564_I2C) += pca9564_i2c.o
 obj-$(CONFIG_TSI108_I2C) += tsi108_i2c.o
 obj-$(CONFIG_U8500_I2C) += u8500_i2c.o
 obj-$(CONFIG_SH_SH7734_I2C) += sh_sh7734_i2c.o
+obj-$(CONFIG_SUNXI_I2C) += sunxi_i2c.o
 obj-$(CONFIG_SYS_I2C) += i2c_core.o
 obj-$(CONFIG_SYS_I2C_FSL) += fsl_i2c.o
 obj-$(CONFIG_SYS_I2C_FTI2C010) += fti2c010.o

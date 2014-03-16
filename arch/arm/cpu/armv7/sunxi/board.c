@@ -11,6 +11,7 @@
  */
 
 #include <common.h>
+#include <i2c.h>
 #include <serial.h>
 #ifdef CONFIG_SPL_BUILD
 #include <spl.h>
@@ -93,6 +94,11 @@ void s_init(void)
 #ifdef CONFIG_SPL_BUILD
 	gd = &gdata;
 	preloader_console_init();
+
+#ifdef CONFIG_SPL_I2C_SUPPORT
+	/* Needed early by sunxi_board_init if PMU is enabled */
+	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
+#endif
 
 	sunxi_board_init();
 #endif
