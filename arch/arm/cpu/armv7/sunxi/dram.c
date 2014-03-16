@@ -33,6 +33,21 @@ static void mctl_ddr3_reset(void)
 	struct sunxi_dram_reg *dram =
 			(struct sunxi_dram_reg *)SUNXI_DRAMC_BASE;
 
+#ifdef CONFIG_SUN4I
+	struct sunxi_timer_reg *timer =
+			(struct sunxi_timer_reg *)SUNXI_TIMER_BASE;
+	u32 reg_val;
+
+	writel(0, &timer->cpu_cfg);
+	reg_val = readl(&timer->cpu_cfg);
+
+	if ((reg_val & CPU_CFG_CHIP_VER_MASK) !=
+	    CPU_CFG_CHIP_VER(CPU_CFG_CHIP_REV_A)) {
+		setbits_le32(&dram->mcr, DRAM_MCR_RESET);
+		udelay(2);
+		clrbits_le32(&dram->mcr, DRAM_MCR_RESET);
+	} else
+#endif
 	{
 		clrbits_le32(&dram->mcr, DRAM_MCR_RESET);
 		udelay(2);
@@ -44,7 +59,11 @@ static void mctl_set_drive(void)
 {
 	struct sunxi_dram_reg *dram = (struct sunxi_dram_reg *)SUNXI_DRAMC_BASE;
 
+#ifdef CONFIG_SUN7I
 	clrsetbits_le32(&dram->mcr, DRAM_MCR_MODE_NORM(0x3) | (0x3 << 28),
+#else
+	clrsetbits_le32(&dram->mcr, DRAM_MCR_MODE_NORM(0x3),
+#endif
 			DRAM_MCR_MODE_EN(0x3) |
 			0xffc);
 }
@@ -96,7 +115,11 @@ static void mctl_enable_dllx(u32 phase)
 		n = DRAM_DCR_NR_DLLCR_16BIT;
 
 	for (i = 1; i < n; i++) {
+#ifdef CONFIG_SUN7I
 		clrsetbits_le32(&dram->dllcr[i], 0xf << 14,
+#else
+		clrsetbits_le32(&dram->dllcr[i], 0x4 << 14,
+#endif
 				(phase & 0xf) << 14);
 		clrsetbits_le32(&dram->dllcr[i], DRAM_DLLCR_NRESET,
 				DRAM_DLLCR_DISABLE);
@@ -116,6 +139,16 @@ static void mctl_enable_dllx(u32 phase)
 }
 
 static u32 hpcr_value[32] = {
+#ifdef CONFIG_SUN4I
+	0x0301, 0x0301, 0x0301, 0x0301,
+	0x0301, 0x0301, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	0x1031, 0x1031, 0x0735, 0x1035,
+	0x1035, 0x0731, 0x1031, 0x0735,
+	0x1035, 0x1031, 0x0731, 0x1035,
+	0x1031, 0x0301, 0x0301, 0x0731
+#endif
 #ifdef CONFIG_SUN7I
 	0x0301, 0x0301, 0x0301, 0x0301,
 	0x0301, 0x0301, 0x0301, 0x0301,
@@ -174,20 +207,34 @@ static void mctl_setup_dram_clock(u32 clk)
 
 	/* setup MBUS clock */
 	reg_val = CCM_MBUS_CTRL_GATE |
+#if defined(CONFIG_SUN7I)
 		  CCM_MBUS_CTRL_CLK_SRC(CCM_MBUS_CTRL_CLK_SRC_PLL6) |
 		  CCM_MBUS_CTRL_N(CCM_MBUS_CTRL_N_X(2)) |
 		  CCM_MBUS_CTRL_M(CCM_MBUS_CTRL_M_X(2));
+#else /* defined(CONFIG_SUN7I) */
+		  CCM_MBUS_CTRL_CLK_SRC(CCM_MBUS_CTRL_CLK_SRC_PLL5) |
+		  CCM_MBUS_CTRL_N(CCM_MBUS_CTRL_N_X(1)) |
+		  CCM_MBUS_CTRL_M(CCM_MBUS_CTRL_M_X(2));
+#endif
 	writel(reg_val, &ccm->mbus_clk_cfg);
 
 	/*
 	 * open DRAMC AHB & DLL register clock
 	 * close it first
 	 */
+#if defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I)
 	clrbits_le32(&ccm->ahb_gate0, CCM_AHB_GATE_SDRAM | CCM_AHB_GATE_DLL);
+#else
+	clrbits_le32(&ccm->ahb_gate0, CCM_AHB_GATE_SDRAM);
+#endif
 	udelay(22);
 
 	/* then open it */
+#if defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I)
 	setbits_le32(&ccm->ahb_gate0, CCM_AHB_GATE_SDRAM | CCM_AHB_GATE_DLL);
+#else
+	setbits_le32(&ccm->ahb_gate0, CCM_AHB_GATE_SDRAM);
+#endif
 	udelay(22);
 }
 
@@ -334,7 +381,41 @@ static void dramc_clock_output_en(u32 on)
 	else
 		clrbits_le32(&dram->mcr, DRAM_MCR_DCLK_OUT);
 #endif
+#ifdef CONFIG_SUN4I
+	struct sunxi_ccm_reg *ccm = (struct sunxi_ccm_reg *)SUNXI_CCM_BASE;
+	if (on)
+		setbits_le32(&ccm->dram_clk_cfg, CCM_DRAM_CTRL_DCLK_OUT);
+	else
+		clrbits_le32(&ccm->dram_clk_cfg, CCM_DRAM_CTRL_DCLK_OUT);
+#endif
 }
+
+#ifdef CONFIG_SUN4I
+static void dramc_set_autorefresh_cycle(u32 clk)
+{
+	struct sunxi_dram_reg *dram = (struct sunxi_dram_reg *)SUNXI_DRAMC_BASE;
+	u32 reg_val;
+	u32 tmp_val;
+	u32 reg_dcr;
+
+	if (clk < 600) {
+		reg_dcr = readl(&dram->dcr);
+		if ((reg_dcr & DRAM_DCR_CHIP_DENSITY_MASK) <=
+		    DRAM_DCR_CHIP_DENSITY(DRAM_DCR_CHIP_DENSITY_1024M))
+			reg_val = (131 * clk) >> 10;
+		else
+			reg_val = (336 * clk) >> 10;
+
+		tmp_val = (7987 * clk) >> 10;
+		tmp_val = tmp_val * 9 - 200;
+		reg_val |= tmp_val << 8;
+		reg_val |= 0x8 << 24;
+		writel(reg_val, &dram->drr);
+	} else {
+		writel(0x0, &dram->drr);
+	}
+}
+#endif /* SUN4I */
 
 #if defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I)
 static void dramc_set_autorefresh_cycle(u32 clk)
@@ -366,10 +447,18 @@ unsigned long dramc_init(struct dram_para *para)
 	mctl_setup_dram_clock(para->clock);
 
 	/* reset external DRAM */
+#ifndef CONFIG_SUN7I
+	mctl_ddr3_reset();
+#endif
 	mctl_set_drive();
 
 	/* dram clock off */
 	dramc_clock_output_en(0);
+
+#ifdef CONFIG_SUN4I
+	/* select dram controller 1 */
+	writel(DRAM_CSEL_MAGIC, &dram->csel);
+#endif
 
 	mctl_itm_disable();
 	mctl_enable_dll0(para->tpr3);
@@ -426,6 +515,9 @@ unsigned long dramc_init(struct dram_para *para)
 		mctl_ddr3_reset();
 	else
 		setbits_le32(&dram->mcr, DRAM_MCR_RESET);
+#else
+	/* dram clock on */
+	dramc_clock_output_en(1);
 #endif
 
 	udelay(1);
@@ -433,6 +525,22 @@ unsigned long dramc_init(struct dram_para *para)
 	while (readl(&dram->ccr) & DRAM_CCR_INIT);
 
 	mctl_enable_dllx(para->tpr3);
+
+#ifdef CONFIG_SUN4I
+	/* set odt impendance divide ratio */
+	reg_val = ((para->zq) >> 8) & 0xfffff;
+	reg_val |= ((para->zq) & 0xff) << 20;
+	reg_val |= (para->zq) & 0xf0000000;
+	writel(reg_val, &dram->zqcr0);
+#endif
+
+#ifdef CONFIG_SUN4I
+	/* set I/O configure register */
+	reg_val = 0x00cc0000;
+	reg_val |= (para->odt_en) & 0x3;
+	reg_val |= ((para->odt_en) & 0x3) << 30;
+	writel(reg_val, &dram->iocr);
+#endif
 
 	/* set refresh period */
 	dramc_set_autorefresh_cycle(para->clock);

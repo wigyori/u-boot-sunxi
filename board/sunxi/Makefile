@@ -9,4 +9,5 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 obj-y	+= board.o
-obj-y	+= dram_cubietruck.o
+obj-$(CONFIG_A10_OLINUXINO_L)	+= dram_a10_olinuxino_l.o
+obj-$(CONFIG_CUBIETRUCK)	+= dram_cubietruck.o
