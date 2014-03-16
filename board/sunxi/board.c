@@ -12,6 +12,9 @@
  */
 
 #include <common.h>
+#ifdef CONFIG_AXP209_POWER
+#include <axp209.h>
+#endif
 #include <asm/arch/clock.h>
 #include <asm/arch/dram.h>
 #include <asm/arch/mmc.h>
@@ -59,6 +62,7 @@ int board_mmc_init(bd_t *bis)
 #ifdef CONFIG_SPL_BUILD
 void sunxi_board_init(void)
 {
+	int power_failed = 0;
 	unsigned long ramsize;
 
 	printf("DRAM:");
@@ -66,5 +70,27 @@ void sunxi_board_init(void)
 	printf(" %lu MiB\n", ramsize >> 20);
 	if (!ramsize)
 		hang();
+
+#ifdef CONFIG_AXP209_POWER
+	power_failed |= axp209_init();
+	power_failed |= axp209_set_dcdc2(1400);
+	power_failed |= axp209_set_dcdc3(1250);
+	power_failed |= axp209_set_ldo2(3000);
+	power_failed |= axp209_set_ldo3(2800);
+	power_failed |= axp209_set_ldo4(2800);
+#endif
+
+	/*
+	 * Only clock up the CPU to full speed if we are reasonably
+	 * assured it's being powered with suitable core voltage
+	 */
+	if (!power_failed)
+#ifdef CONFIG_SUN7I
+		clock_set_pll1(912000000);
+#else
+		clock_set_pll1(1008000000);
+#endif
+	else
+		printf("Failed to set core voltage! Can't set CPU frequency\n");
 }
 #endif
