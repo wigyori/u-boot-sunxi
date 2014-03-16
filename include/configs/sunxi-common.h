@@ -176,7 +176,9 @@
 #undef CONFIG_CMD_NET
 #undef CONFIG_CMD_NFS
 
+#ifndef CONFIG_CONS_INDEX
 #define CONFIG_CONS_INDEX              1       /* UART0 */
+#endif
 
 #if !defined CONFIG_ENV_IS_IN_MMC && \
     !defined CONFIG_ENV_IS_IN_NAND && \

@@ -10,4 +10,5 @@
 #
 obj-y	+= board.o
 obj-$(CONFIG_A10_OLINUXINO_L)	+= dram_a10_olinuxino_l.o
+obj-$(CONFIG_A10S_OLINUXINO_M)	+= dram_a10s_olinuxino_m.o
 obj-$(CONFIG_CUBIETRUCK)	+= dram_cubietruck.o

@@ -139,6 +139,16 @@ static void mctl_enable_dllx(u32 phase)
 }
 
 static u32 hpcr_value[32] = {
+#ifdef CONFIG_SUN5I
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	0x1031, 0x1031, 0x0735, 0x1035,
+	0x1035, 0x0731, 0x1031, 0,
+	0x0301, 0x0301, 0x0301, 0x0301,
+	0x0301, 0x0301, 0x0301, 0
+#endif
 #ifdef CONFIG_SUN4I
 	0x0301, 0x0301, 0x0301, 0x0301,
 	0x0301, 0x0301, 0, 0,
@@ -445,6 +455,11 @@ unsigned long dramc_init(struct dram_para *para)
 
 	/* setup DRAM relative clock */
 	mctl_setup_dram_clock(para->clock);
+
+#ifdef CONFIG_SUN5I
+	/* Disable any pad power save control */
+	writel(0, &dram->ppwrsctl);
+#endif
 
 	/* reset external DRAM */
 #ifndef CONFIG_SUN7I

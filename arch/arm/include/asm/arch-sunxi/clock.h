@@ -119,7 +119,14 @@ struct sunxi_ccm_reg {
 
 #define PLL1_CFG_DEFAULT	0xa1005000
 
+#ifdef CONFIG_SUN5I
+#define PLL6_CFG_DEFAULT	0x21009911
+#endif
 #define PLL6_ENABLE_OFFSET	31
+
+#ifdef CONFIG_SUN5I
+#define AHB_CLK_SRC_AXI			0
+#endif
 
 #define CLK_GATE_OPEN			0x1
 #define CLK_GATE_CLOSE			0x0
