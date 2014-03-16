@@ -30,10 +30,20 @@ struct sunxi_mmc_des {
 	u32 reserved1_2:24;
 	u32 card_err_sum:1;	/* transfer error flag */
 	u32 own:1;		/* des owner:1-idma owns it, 0-host owns it */
+#ifdef CONFIG_SUN4I
+#define SDXC_DES_NUM_SHIFT 13
+#define SDXC_DES_BUFFER_MAX_LEN	(1 << SDXC_DES_NUM_SHIFT)
+	u32 data_buf1_sz:13;
+	u32 data_buf2_sz:13;
+	u32 reserverd2_1:6;
+#elif defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I)
 #define SDXC_DES_NUM_SHIFT 16
 #define SDXC_DES_BUFFER_MAX_LEN	(1 << SDXC_DES_NUM_SHIFT)
 	u32 data_buf1_sz:16;
 	u32 data_buf2_sz:16;
+#else
+#error ">>>> Wrong Platform for MMC <<<<"
+#endif
 	u32 buf_addr_ptr1;
 	u32 buf_addr_ptr2;
 };
