@@ -217,7 +217,11 @@ static void mctl_setup_dram_clock(u32 clk)
 
 	/* setup MBUS clock */
 	reg_val = CCM_MBUS_CTRL_GATE |
-#if defined(CONFIG_SUN7I)
+#if defined(CONFIG_SUN7I) && defined(CONFIG_FAST_MBUS)
+		  CCM_MBUS_CTRL_CLK_SRC(CCM_MBUS_CTRL_CLK_SRC_PLL6) |
+		  CCM_MBUS_CTRL_N(CCM_MBUS_CTRL_N_X(1)) |
+		  CCM_MBUS_CTRL_M(CCM_MBUS_CTRL_M_X(3));
+#elif defined(CONFIG_SUN7I) && !defined(CONFIG_FAST_MBUS)
 		  CCM_MBUS_CTRL_CLK_SRC(CCM_MBUS_CTRL_CLK_SRC_PLL6) |
 		  CCM_MBUS_CTRL_N(CCM_MBUS_CTRL_N_X(2)) |
 		  CCM_MBUS_CTRL_M(CCM_MBUS_CTRL_M_X(2));
