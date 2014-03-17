@@ -116,6 +116,7 @@ static void mctl_enable_dllx(u32 phase)
 }
 
 static u32 hpcr_value[32] = {
+#ifdef CONFIG_SUN7I
 	0x0301, 0x0301, 0x0301, 0x0301,
 	0x0301, 0x0301, 0x0301, 0x0301,
 	0, 0, 0, 0,
@@ -129,6 +130,7 @@ static u32 hpcr_value[32] = {
 	 * but boot0 code skips #28 and #30, and sets #29 and #31 to the
 	 * value from #28 entry (0x1031)
          */
+#endif
 };
 
 static void mctl_configure_hostport(void)
@@ -162,11 +164,13 @@ static void mctl_setup_dram_clock(u32 clk)
 
 	setbits_le32(&ccm->pll5_cfg, CCM_PLL5_CTRL_DDR_CLK);
 
+#if defined(CONFIG_SUN4I) || defined(CONFIG_SUN7I)
 	/* reset GPS */
 	clrbits_le32(&ccm->gps_clk_cfg, CCM_GPS_CTRL_RESET | CCM_GPS_CTRL_GATE);
 	setbits_le32(&ccm->ahb_gate0, CCM_AHB_GATE_GPS);
 	udelay(1);
 	clrbits_le32(&ccm->ahb_gate0, CCM_AHB_GATE_GPS);
+#endif
 
 	/* setup MBUS clock */
 	reg_val = CCM_MBUS_CTRL_GATE |
@@ -193,7 +197,9 @@ static int dramc_scan_readpipe(void)
 	u32 reg_val;
 
 	/* data training trigger */
+#ifdef CONFIG_SUN7I
 	clrbits_le32(&dram->csr, DRAM_CSR_FAILED);
+#endif
 	setbits_le32(&dram->ccr, DRAM_CCR_DATA_TRAINING);
 
 	/* check whether data training process has completed */
@@ -320,15 +326,17 @@ fail:
 
 static void dramc_clock_output_en(u32 on)
 {
+#if defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I)
 	struct sunxi_dram_reg *dram = (struct sunxi_dram_reg *)SUNXI_DRAMC_BASE;
 
 	if (on)
 		setbits_le32(&dram->mcr, DRAM_MCR_DCLK_OUT);
 	else
 		clrbits_le32(&dram->mcr, DRAM_MCR_DCLK_OUT);
+#endif
 }
 
-
+#if defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I)
 static void dramc_set_autorefresh_cycle(u32 clk)
 {
 	struct sunxi_dram_reg *dram = (struct sunxi_dram_reg *)SUNXI_DRAMC_BASE;
@@ -342,6 +350,7 @@ static void dramc_set_autorefresh_cycle(u32 clk)
 	reg_val |= 0x8 << 24;
 	writel(reg_val, &dram->drr);
 }
+#endif /* SUN5I */
 
 unsigned long dramc_init(struct dram_para *para)
 {
@@ -392,24 +401,32 @@ unsigned long dramc_init(struct dram_para *para)
 	reg_val |= DRAM_DCR_MODE(DRAM_DCR_MODE_INTERLEAVE);
 	writel(reg_val, &dram->dcr);
 
+#ifdef CONFIG_SUN7I
 	setbits_le32(&dram->zqcr1, (0x1 << 24) | (0x1 << 1));
 	if (para->tpr4 & 0x2)
 		clrsetbits_le32(&dram->zqcr1, (0x1 << 24), (0x1 << 1));
 	dramc_clock_output_en(1);
+#endif
 
+#if (defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I))
 	/* set odt impendance divide ratio */
 	reg_val = ((para->zq) >> 8) & 0xfffff;
 	reg_val |= ((para->zq) & 0xff) << 20;
 	reg_val |= (para->zq) & 0xf0000000;
 	writel(reg_val, &dram->zqcr0);
+#endif
 
+#ifdef CONFIG_SUN7I
 	/* Set CKE Delay to about 1ms */
 	setbits_le32(&dram->idcr, 0x1ffff);
+#endif
 
+#ifdef CONFIG_SUN7I
 	if ((readl(&dram->ppwrsctl) & 0x1) != 0x1)
 		mctl_ddr3_reset();
 	else
 		setbits_le32(&dram->mcr, DRAM_MCR_RESET);
+#endif
 
 	udelay(1);
 
@@ -427,7 +444,9 @@ unsigned long dramc_init(struct dram_para *para)
 
 	if (para->type == DRAM_MEMORY_TYPE_DDR3) {
 		reg_val = DRAM_MR_BURST_LENGTH(0x0);
+#if (defined(CONFIG_SUN5I) || defined(CONFIG_SUN7I))
 		reg_val |= DRAM_MR_POWER_DOWN;
+#endif
 		reg_val |= DRAM_MR_CAS_LAT(para->cas - 4);
 		reg_val |= DRAM_MR_WRITE_RECOVERY(0x5);
 	} else if (para->type == DRAM_MEMORY_TYPE_DDR2) {
@@ -444,13 +463,16 @@ unsigned long dramc_init(struct dram_para *para)
 	/* set DQS window mode */
 	clrsetbits_le32(&dram->ccr, DRAM_CCR_DQS_DRIFT_COMP, DRAM_CCR_DQS_GATE);
 
+#ifdef CONFIG_SUN7I
 	/* Command rate timing mode 2T & 1T */
 	if (para->tpr4 & 0x1)
 		setbits_le32(&dram->ccr, DRAM_CCR_COMMAND_RATE_1T);
+#endif
 	/* reset external DRAM */
 	setbits_le32(&dram->ccr, DRAM_CCR_INIT);
 	while (readl(&dram->ccr) & DRAM_CCR_INIT);
 
+#ifdef CONFIG_SUN7I
 	/* setup zq calibration manual */
 	reg_val = readl(&dram->ppwrsctl);
 	if ((reg_val & 0x1) == 1) {
@@ -486,6 +508,7 @@ unsigned long dramc_init(struct dram_para *para)
 
 		udelay(2);
 	}
+#endif
 
 	/* scan read pipe value */
 	mctl_itm_enable();
