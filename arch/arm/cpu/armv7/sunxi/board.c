@@ -12,6 +12,8 @@
 
 #include <common.h>
 #include <i2c.h>
+#include <netdev.h>
+#include <miiphy.h>
 #include <serial.h>
 #ifdef CONFIG_SPL_BUILD
 #include <spl.h>
@@ -109,5 +111,20 @@ void enable_caches(void)
 {
 	/* Enable D-cache. I-cache is already enabled in start.S */
 	dcache_enable();
+}
+#endif
+
+#if defined(CONFIG_SUNXI_EMAC) || defined(CONFIG_SUNXI_GMAC)
+/*
+ * Initializes on-chip ethernet controllers.
+ * to override, implement board_eth_init()
+ */
+int cpu_eth_init(bd_t *bis)
+{
+#ifdef CONFIG_SUNXI_EMAC
+	sunxi_emac_initialize(bis);
+#endif
+
+	return 0;
 }
 #endif
