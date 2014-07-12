@@ -137,7 +137,7 @@ void i2c_init_board(void)
 	clock_twi_onoff(0, 1);
 }
 
-#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_SUN6I) || defined(CONFIG_SUN8I)
+#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_SUN8I)
 void sunxi_board_init(void)
 {
 	int power_failed = 0;
@@ -191,6 +191,10 @@ void sunxi_board_init(void)
 		clock_set_pll1(CONFIG_CLK_FULL_SPEED);
 	else
 		printf("Failed to set core voltage! Can't set CPU frequency\n");
+#endif
+#ifdef CONFIG_SUN6I
+	printf("DRAM: FIXME\n");
+	while (1) {}
 #endif
 }
 #endif

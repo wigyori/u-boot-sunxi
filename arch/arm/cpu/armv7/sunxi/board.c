@@ -117,8 +117,8 @@ void s_init(void)
 	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 #endif
 #endif
-/* No SPL on sun6i, so we do sunxi_board_init() from non spl there */
-#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_SUN6I) || defined(CONFIG_SUN8I)
+/* No SPL on sun8i, so we do sunxi_board_init() from non spl there */
+#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_SUN8I)
 	sunxi_board_init();
 #endif
 }
