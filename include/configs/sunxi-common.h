@@ -197,6 +197,30 @@
 #define CONFIG_SPL_GPIO_SUPPORT
 #define CONFIG_CMD_GPIO
 
+#ifdef CONFIG_VIDEO
+/*
+ * The amount of RAM that is reserved for the FB. This will not show up as
+ * RAM to the kernel, but will be reclaimed by a KMS driver in future.
+ */
+#define CONFIG_SUNXI_FB_SIZE (8 << 20)
+
+#define CONFIG_VIDEO_SUNXI
+
+#define CONFIG_CFB_CONSOLE
+#define CONFIG_VIDEO_SW_CURSOR
+#define CONFIG_VIDEO_LOGO
+
+/* allow both serial and cfb console. */
+#define CONFIG_CONSOLE_MUX
+/* this is needed so the above will actually do something */
+#define CONFIG_SYS_CONSOLE_IS_IN_ENV
+/* stop x86 thinking in cfbconsole from trying to init a pc keyboard */
+#define CONFIG_VGA_AS_SINGLE_DEVICE
+
+#define CONFIG_SYS_MEM_TOP_HIDE ((CONFIG_SUNXI_FB_SIZE + 0xFFF) & ~0xFFF)
+
+#endif /* CONFIG_VIDEO */
+
 /* Ethernet support */
 #ifdef CONFIG_SUNXI_EMAC
 #define CONFIG_MII			/* MII PHY management		*/
@@ -266,7 +290,17 @@
 
 #include <config_distro_bootcmd.h>
 
+#ifdef CONFIG_VIDEO
+#define CONSOLE_ENV_SETTINGS \
+	"stdin=serial\0" \
+	"stdout=serial,vga\0" \
+	"stderr=serial,vga\0"
+#else
+#define CONSOLE_ENV_SETTINGS
+#endif
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
+	CONSOLE_ENV_SETTINGS \
 	MEM_LAYOUT_ENV_SETTINGS \
 	"fdtfile=" CONFIG_FDTFILE "\0" \
 	"console=ttyS0,115200\0" \

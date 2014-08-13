@@ -198,6 +198,7 @@ struct sunxi_ccm_reg {
 
 #define AXI_GATE_OFFSET_DRAM		0
 
+/* ahb_gate0 offsets */
 #define AHB_GATE_OFFSET_USB_OHCI1	30
 #define AHB_GATE_OFFSET_USB_OHCI0	29
 #define AHB_GATE_OFFSET_USB_EHCI1	27
@@ -208,6 +209,13 @@ struct sunxi_ccm_reg {
 #define AHB_GATE_OFFSET_MMC1		9
 #define AHB_GATE_OFFSET_MMC0		8
 #define AHB_GATE_OFFSET_MMC(n)		(AHB_GATE_OFFSET_MMC0 + (n))
+
+/* ahb_gate1 offsets */
+#define AHB_GATE_OFFSET_DRC0		21
+#define AHB_GATE_OFFSET_DE_BE0		12
+#define AHB_GATE_OFFSET_HDMI		11
+#define AHB_GATE_OFFSET_LCD1		5
+#define AHB_GATE_OFFSET_LCD0		4
 
 #define CCM_MMC_CTRL_OSCM24 (0x0 << 24)
 #define CCM_MMC_CTRL_PLL6   (0x1 << 24)
@@ -228,14 +236,53 @@ struct sunxi_ccm_reg {
 #define CCM_DRAMCLK_CFG_UPD		(0x1 << 16)
 #define CCM_DRAMCLK_CFG_RST		(0x1 << 31)
 
+#define CCM_DRAM_GATE_OFFSET_DE_BE0	26
+
+#define CCM_DE_BE0_CTRL_M(n)		((((n) - 1) & 0xf) << 0)
+#define CCM_DE_BE0_CTRL_PLL(n)		(((n) & 0x3) << 24)
+/* sun6i has no reset bit in the DE-BE0 clock reg */
+#define CCM_DE_BE0_CTRL_RST 		0
+#define CCM_DE_BE0_CTRL_GATE 		(0x1 << 31)
+
+#define CCM_LCD_CH0_CTRL_PLL3		(0 << 24)
+#define CCM_LCD_CH0_CTRL_PLL7		(1 << 24)
+#define CCM_LCD_CH0_CTRL_PLL3_2X	(2 << 24)
+#define CCM_LCD_CH0_CTRL_PLL7_2X	(3 << 24)
+#define CCM_LCD_CH0_CTRL_MIPI_PLL	(4 << 24)
+#define CCM_LCD_CH0_CTRL_GATE 		(0x1 << 31)
+
+#define CCM_LCD_CH1_CTRL_M(n)		((((n) - 1) & 0xf) << 0)
+#define CCM_LCD_CH1_CTRL_PLL3		(0 << 24)
+#define CCM_LCD_CH1_CTRL_PLL7		(1 << 24)
+#define CCM_LCD_CH1_CTRL_PLL3_2X	(2 << 24)
+#define CCM_LCD_CH1_CTRL_PLL7_2X	(3 << 24)
+#define CCM_LCD_CH1_CTRL_GATE 		(0x1 << 31)
+
+#define CCM_HDMI_CTRL_M(n)		((((n) - 1) & 0xf) << 0)
+#define CCM_HDMI_CTRL_PLL_MASK		(3 << 24)
+#define CCM_HDMI_CTRL_PLL3		(0 << 24)
+#define CCM_HDMI_CTRL_PLL7		(1 << 24)
+#define CCM_HDMI_CTRL_PLL3_2X		(2 << 24)
+#define CCM_HDMI_CTRL_PLL7_2X		(3 << 24)
+#define CCM_HDMI_CTRL_DDC_GATE 		(0x1 << 30)
+#define CCM_HDMI_CTRL_GATE 		(0x1 << 31)
+
 #define MBUS_CLK_DEFAULT		0x81000001 /* PLL6 / 2 */
 
+/* ahb_reset0 offsets */
 #define AHB_RESET_OFFSET_MCTL		14
 #define AHB_RESET_OFFSET_MMC3		11
 #define AHB_RESET_OFFSET_MMC2		10
 #define AHB_RESET_OFFSET_MMC1		9
 #define AHB_RESET_OFFSET_MMC0		8
 #define AHB_RESET_OFFSET_MMC(n)		(AHB_RESET_OFFSET_MMC0 + (n))
+
+/* ahb_reset0 offsets */
+#define AHB_RESET_OFFSET_DRC0		21
+#define AHB_RESET_OFFSET_DE_BE0		12
+#define AHB_RESET_OFFSET_HDMI		11
+#define AHB_RESET_OFFSET_LCD1		5
+#define AHB_RESET_OFFSET_LCD0		4
 
 /* apb2 reset */
 #define APB2_RESET_UART_SHIFT		(16)
