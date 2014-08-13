@@ -16,6 +16,11 @@
 #include <linux/fb.h>
 #include <video_fb.h>
 
+/* for simplefb */
+#ifdef CONFIG_OF_BOARD_SETUP
+#include <libfdt.h>
+#endif
+
 DECLARE_GLOBAL_DATA_PTR;
 
 struct sunxi_display {
@@ -527,3 +532,108 @@ video_hw_init(void)
 
 	return graphic_device;
 }
+
+/*
+ * Simplefb support.
+ */
+#if defined(CONFIG_OF_BOARD_SETUP) && defined(CONFIG_VIDEO_DT_SIMPLEFB)
+static void
+sunxi_simplefb_clocks(void *blob, int node_simplefb)
+{
+	const char *compatible[] = {
+		"allwinner,sun4i-a10-ahb-gates-clk",
+		"allwinner,sun5i-a10s-ahb-gates-clk",
+		"allwinner,sun5i-a13-ahb-gates-clk",
+		"allwinner,sun7i-a20-ahb-gates-clk",
+		NULL,
+	};
+
+	/*
+	 * This currently ignores standalone clocks, like pll3/7, as these
+	 * are still ignored in the dts files.
+	 */
+	fdt32_t cells[] = {
+		0, fdt32_to_cpu(0x24), /* ahb_lcd0 */
+		0, fdt32_to_cpu(0x2B), /* ahb_hdmi */
+		0, fdt32_to_cpu(0x2C), /* ahb_de_be0 */
+	};
+	int node_clock, i, phandle, ret;
+
+	/* Find the ahb_gates node. */
+	for (i = 0; compatible[i]; i++) {
+		node_clock =
+			fdt_node_offset_by_compatible(blob, 0, compatible[i]);
+		if (node_clock >= 0)
+			break;
+	}
+
+	if (!compatible[i]) {
+		eprintf("%s: unable to find ahb_gates device-tree node.\n",
+			__func__);
+		return;
+	}
+
+	/* Now add our actual clocks tuples. */
+	phandle = fdt_get_phandle(blob, node_clock);
+
+	for (i = 0; i < (sizeof(cells) / sizeof(*cells)); i += 2)
+		cells[i] = fdt32_to_cpu(phandle);
+
+	ret = fdt_setprop(blob, node_simplefb, "clocks", cells, sizeof(cells));
+	if (ret)
+		eprintf("%s: fdt_setprop \"clocks\" failed: %d\n",
+			__func__, ret);
+}
+
+void
+sunxi_simplefb_setup(void *blob)
+{
+	static GraphicDevice *graphic_device = sunxi_display->graphic_device;
+	const char *name = "simple-framebuffer";
+	const char *format = "x8r8g8b8";
+	fdt32_t cells[2];
+	int offset, stride, ret;
+
+	if (!sunxi_display->enabled)
+		return;
+
+	offset = fdt_add_subnode(blob, 0, "framebuffer");
+	if (offset < 0) {
+		printf("%s: add subnode failed", __func__);
+		return;
+	}
+
+	ret = fdt_setprop(blob, offset, "compatible", name, strlen(name) + 1);
+	if (ret < 0)
+		return;
+
+	stride = graphic_device->winSizeX * graphic_device->gdfBytesPP;
+
+	cells[0] = cpu_to_fdt32(gd->fb_base);
+	cells[1] = cpu_to_fdt32(CONFIG_SUNXI_FB_SIZE);
+	ret = fdt_setprop(blob, offset, "reg", cells, sizeof(cells[0]) * 2);
+	if (ret < 0)
+		return;
+
+	cells[0] = cpu_to_fdt32(graphic_device->winSizeX);
+	ret = fdt_setprop(blob, offset, "width", cells, sizeof(cells[0]));
+	if (ret < 0)
+		return;
+
+	cells[0] = cpu_to_fdt32(graphic_device->winSizeY);
+	ret = fdt_setprop(blob, offset, "height", cells, sizeof(cells[0]));
+	if (ret < 0)
+		return;
+
+	cells[0] = cpu_to_fdt32(stride);
+	ret = fdt_setprop(blob, offset, "stride", cells, sizeof(cells[0]));
+	if (ret < 0)
+		return;
+
+	ret = fdt_setprop(blob, offset, "format", format, strlen(format) + 1);
+	if (ret < 0)
+		return;
+
+	sunxi_simplefb_clocks(blob, offset);
+}
+#endif /* CONFIG_OF_BOARD_SETUP && CONFIG_VIDEO_DT_SIMPLEFB */
