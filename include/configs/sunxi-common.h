@@ -249,6 +249,12 @@
 #define CONFIG_USB_STORAGE
 #endif
 
+#ifdef CONFIG_USB_KEYBOARD
+#define CONFIG_SYS_USB_EVENT_POLL_VIA_INT_QUEUE
+#define CONFIG_PREBOOT
+#define CONFIG_SYS_STDIO_DEREGISTER
+#endif
+
 #if !defined CONFIG_ENV_IS_IN_MMC && \
     !defined CONFIG_ENV_IS_IN_NAND && \
     !defined CONFIG_ENV_IS_IN_FAT && \
@@ -298,17 +304,28 @@
 
 #include <config_distro_bootcmd.h>
 
+#ifdef CONFIG_USB_KEYBOARD
+#define CONSOLE_IN_SETTINGS \
+	"preboot=usb start\0" \
+	"stdin=serial,usbkbd\0"
+#else
+#define CONSOLE_IN_SETTINGS \
+	"stdin=serial\0"
+#endif
+
 #ifdef CONFIG_VIDEO
-#define CONSOLE_ENV_SETTINGS \
-	"stdin=serial\0" \
+#define CONSOLE_OUT_SETTINGS \
 	"stdout=serial,vga\0" \
 	"stderr=serial,vga\0"
 #else
-#define CONSOLE_ENV_SETTINGS
+#define CONSOLE_OUT_SETTINGS \
+	"stdout=serial\0" \
+	"stderr=serial\0"
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	CONSOLE_ENV_SETTINGS \
+	CONSOLE_IN_SETTINGS \
+	CONSOLE_OUT_SETTINGS \
 	MEM_LAYOUT_ENV_SETTINGS \
 	"fdtfile=" CONFIG_FDTFILE "\0" \
 	"console=ttyS0,115200\0" \
