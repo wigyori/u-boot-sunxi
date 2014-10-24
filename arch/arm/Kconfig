@@ -444,20 +444,8 @@ config TARGET_CM_FX6
 config TARGET_SOCFPGA_CYCLONE5
 	bool "Support socfpga_cyclone5"
 
-config TARGET_SUN4I
-	bool "Support sun4i"
-
-config TARGET_SUN5I
-	bool "Support sun5i"
-
-config TARGET_SUN6I
-	bool "Support sun6i"
-
-config TARGET_SUN7I
-	bool "Support sun7i"
-
-config TARGET_SUN8I
-	bool "Support sun8i"
+config ARCH_SUNXI
+	bool "Support sunxi (Allwinner) SoCs"
 
 config TARGET_SNOWBALL
 	bool "Support snowball"
