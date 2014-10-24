@@ -809,6 +809,8 @@ source "arch/arm/cpu/arm926ejs/versatile/Kconfig"
 
 source "arch/arm/cpu/armv7/zynq/Kconfig"
 
+source "arch/arm/cpu/armv7/Kconfig"
+
 source "board/aristainetos/Kconfig"
 source "board/BuR/kwb/Kconfig"
 source "board/BuR/tseries/Kconfig"

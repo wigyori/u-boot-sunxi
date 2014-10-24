@@ -1,0 +1,20 @@
+# FIXME, Once overything in u-boot is properly Kconfig-ified
+# this entire file should be "if ARMV7"
+if TARGET_ARNDALE || MACH_SUN7I || TARGET_VEXPRESS_CA15_TC2
+
+# FIXME, needs a "depends on ARMV7_HAS_NONSEC"
+config ARMV7_NONSEC
+	boolean "Enable support for booting in non-secure mode" if EXPERT
+	default y
+	---help---
+	Say Y here to enable support for booting in non-secure / SVC mode.
+
+# FIXME, needs a "depends on ARMV7_HAS_VIRT"
+config ARMV7_VIRT
+	boolean "Enable support for hardware virtualization" if EXPERT
+	depends on ARMV7_NONSEC
+	default y
+	---help---
+	Say Y here to boot in hypervisor (HYP) mode when booting non-secure.
+
+endif
