@@ -176,13 +176,18 @@ struct sunxi_ccm_reg {
 #define CCM_PLL1_CTRL_MAGIC		(0x1 << 16)
 #define CCM_PLL1_CTRL_EN		(0x1 << 31)
 
+#define CCM_PLL3_CTRL_M(n)		((((n) - 1) & 0xf) << 0)
+#define CCM_PLL3_CTRL_N(n)		((((n) - 1) & 0x7f) << 8)
+#define CCM_PLL3_CTRL_INTEGER_MODE	(0x1 << 24)
+#define CCM_PLL3_CTRL_EN		(0x1 << 31)
+
 #define CCM_PLL5_CTRL_M(n)		((((n) - 1) & 0x3) << 0)
 #define CCM_PLL5_CTRL_K(n)		((((n) - 1) & 0x3) << 4)
 #define CCM_PLL5_CTRL_N(n)		((((n) - 1) & 0x1f) << 8)
 #define CCM_PLL5_CTRL_UPD		(0x1 << 20)
 #define CCM_PLL5_CTRL_EN		(0x1 << 31)
 
-#define PLL6_CFG_DEFAULT		0x90041811
+#define PLL6_CFG_DEFAULT		0x90041811 /* 600 MHz */
 
 #define CCM_PLL6_CTRL_N_SHIFT		8
 #define CCM_PLL6_CTRL_N_MASK		(0x1f << CCM_PLL6_CTRL_N_SHIFT)

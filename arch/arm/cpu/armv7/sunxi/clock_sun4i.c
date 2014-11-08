@@ -180,6 +180,21 @@ void clock_set_pll1(unsigned int hz)
 }
 #endif
 
+void clock_set_pll3(unsigned int clk)
+{
+	struct sunxi_ccm_reg * const ccm =
+		(struct sunxi_ccm_reg *)SUNXI_CCM_BASE;
+
+	if (clk == 0) {
+		clrbits_le32(&ccm->pll3_cfg, CCM_PLL3_CTRL_EN);
+		return;
+	}
+
+	/* PLL3 rate = 3000000 * m */
+	writel(CCM_PLL3_CTRL_EN | CCM_PLL3_CTRL_INTEGER_MODE |
+	       CCM_PLL3_CTRL_M(clk / 3000000), &ccm->pll3_cfg);
+}
+
 unsigned int clock_get_pll5p(void)
 {
 	struct sunxi_ccm_reg *const ccm =

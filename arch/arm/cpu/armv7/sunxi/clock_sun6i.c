@@ -127,6 +127,23 @@ void clock_set_pll1(unsigned int clk)
 }
 #endif
 
+void clock_set_pll3(unsigned int clk)
+{
+	struct sunxi_ccm_reg * const ccm =
+		(struct sunxi_ccm_reg *)SUNXI_CCM_BASE;
+	const int m = 8; /* 3 MHz steps just like sun4i, sun5i and sun7i */
+
+	if (clk == 0) {
+		clrbits_le32(&ccm->pll3_cfg, CCM_PLL3_CTRL_EN);
+		return;
+	}
+
+	/* PLL3 rate = 24000000 * n / m */
+	writel(CCM_PLL3_CTRL_EN | CCM_PLL3_CTRL_INTEGER_MODE |
+	       CCM_PLL3_CTRL_N(clk / (24000000 / m)) | CCM_PLL3_CTRL_M(m),
+	       &ccm->pll3_cfg);
+}
+
 void clock_set_pll5(unsigned int clk)
 {
 	struct sunxi_ccm_reg * const ccm =
